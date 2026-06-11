@@ -1,0 +1,12 @@
+{"level":30,"time":1781122943998,"pid":31244,"hostname":"rtutii","msg":"Server listening at http://127.0.0.1:8080"}
+Intercepting https://plugin-license.vercel.app on 127.0.0.1:443 -> http://127.0.0.1:8080
+{"level":30,"time":1781122959884,"pid":31244,"hostname":"rtutii","reqId":"req-1","req":{"method":"POST","url":"/api/license/status","host":"127.0.0.1:8080","remoteAddress":"127.0.0.1","remotePort":55336},"msg":"incoming request"}
+{"level":30,"time":1781122959891,"pid":31244,"hostname":"rtutii","reqId":"req-1","res":{"statusCode":400},"responseTime":6.883299998939037,"msg":"request completed"}
+{"level":30,"time":1781122990279,"pid":31244,"hostname":"rtutii","reqId":"req-2","req":{"method":"GET","url":"/health","host":"127.0.0.1:8080","remoteAddress":"127.0.0.1","remotePort":62000},"msg":"incoming request"}
+{"level":30,"time":1781122990280,"pid":31244,"hostname":"rtutii","reqId":"req-2","res":{"statusCode":200},"responseTime":1.3003000020980835,"msg":"request completed"}
+{"level":30,"time":1781123268207,"pid":31244,"hostname":"rtutii","reqId":"req-3","req":{"method":"GET","url":"/?pgsql=db&username=rtutii&db=rtutii_db&ns=public","host":"localhost:8080","remoteAddress":"127.0.0.1","remotePort":62447},"msg":"incoming request"}
+{"level":30,"time":1781123268207,"pid":31244,"hostname":"rtutii","reqId":"req-3","msg":"Route GET:/?pgsql=db&username=rtutii&db=rtutii_db&ns=public not found"}
+{"level":30,"time":1781123268208,"pid":31244,"hostname":"rtutii","reqId":"req-3","res":{"statusCode":404},"responseTime":0.9836999997496605,"msg":"request completed"}
+{"level":30,"time":1781123268597,"pid":31244,"hostname":"rtutii","reqId":"req-4","req":{"method":"GET","url":"/favicon.ico","host":"localhost:8080","remoteAddress":"127.0.0.1","remotePort":62447},"msg":"incoming request"}
+{"level":30,"time":1781123268597,"pid":31244,"hostname":"rtutii","reqId":"req-4","msg":"Route GET:/favicon.ico not found"}
+{"level":30,"time":1781123268598,"pid":31244,"hostname":"rtutii","reqId":"req-4","res":{"statusCode":404},"responseTime":0.93299999833107,"msg":"request completed"}
