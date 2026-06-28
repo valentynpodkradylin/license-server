@@ -30,6 +30,9 @@ beforeEach(async () => {
       databasePath: ":memory:",
       downloadsPath: process.cwd(),
       openMeteoUrl: "https://example.test/forecast",
+      adminUsername: "admin",
+      adminPassword: "secret",
+      publicSiteUrl: "http://127.0.0.1:8080",
     }),
     db,
     fetchImpl: async (input) => {
@@ -67,6 +70,86 @@ test("health reports that the server is ready", async () => {
   });
   assert.equal(response.statusCode, 200);
   assert.deepEqual(response.json(), { status: "ok" });
+});
+
+test("admin requires login and accepts the configured credentials", async () => {
+  const locked = await app.inject({ method: "GET", url: "/admin" });
+  assert.equal(locked.statusCode, 302);
+  assert.equal(locked.headers.location, "/admin/login");
+
+  const rejected = await app.inject({
+    method: "POST",
+    url: "/admin/login",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    payload: new URLSearchParams({ username: "admin" }).toString(),
+  });
+  assert.equal(rejected.statusCode, 401);
+
+  const login = await app.inject({
+    method: "POST",
+    url: "/admin/login",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    payload: new URLSearchParams({
+      username: "admin",
+      password: "secret",
+    }).toString(),
+  });
+  assert.equal(login.statusCode, 302);
+  const cookie = login.headers["set-cookie"];
+  assert.ok(cookie);
+
+  const open = await app.inject({
+    method: "GET",
+    url: "/admin",
+    headers: { cookie: Array.isArray(cookie) ? cookie[0] : cookie },
+  });
+  assert.equal(open.statusCode, 200);
+  assert.match(open.body, /LICENSE-KEY-1234567890AB/);
+});
+
+test("admin creates perpetual and expiring licenses", async () => {
+  const login = await app.inject({
+    method: "POST",
+    url: "/admin/login",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    payload: new URLSearchParams({
+      username: "admin",
+      password: "secret",
+    }).toString(),
+  });
+  const cookie = login.headers["set-cookie"];
+  const cookieHeader = Array.isArray(cookie) ? cookie[0] : cookie;
+  assert.ok(cookieHeader);
+
+  const forever = await app.inject({
+    method: "POST",
+    url: "/admin/licenses",
+    headers: {
+      cookie: cookieHeader,
+      "content-type": "application/x-www-form-urlencoded",
+    },
+    payload: new URLSearchParams({ key: "FOREVER" }).toString(),
+  });
+  assert.equal(forever.statusCode, 302);
+  assert.equal(repository.getLicense("FOREVER")?.expires_at, null);
+
+  const expiring = await app.inject({
+    method: "POST",
+    url: "/admin/licenses",
+    headers: {
+      cookie: cookieHeader,
+      "content-type": "application/x-www-form-urlencoded",
+    },
+    payload: new URLSearchParams({
+      key: "EXPIRING",
+      expires_at: "2027-01-01T00:00:00Z",
+    }).toString(),
+  });
+  assert.equal(expiring.statusCode, 302);
+  assert.equal(
+    repository.getLicense("EXPIRING")?.expires_at,
+    "2027-01-01T00:00:00.000Z",
+  );
 });
 
 test("activation is compatible with the C# decoder and supports multiple devices", async () => {

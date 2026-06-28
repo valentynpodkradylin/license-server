@@ -1,7 +1,6 @@
 import { parseArgs } from "node:util";
 import { getConfig } from "./config.js";
-import { openDatabase } from "./database.js";
-import { LicenseRepository } from "./licenseRepository.js";
+import { openRepository } from "./repositoryFactory.js";
 
 const command = process.argv[2];
 const { values } = parseArgs({
@@ -16,8 +15,8 @@ const { values } = parseArgs({
   strict: true,
 });
 
-const db = openDatabase(getConfig().databasePath);
-const repository = new LicenseRepository(db);
+const store = await openRepository(getConfig());
+const repository = store.repository;
 
 try {
   switch (command) {
@@ -26,18 +25,18 @@ try {
       const expiresAt = values.expires
         ? new Date(values.expires).toISOString()
         : null;
-      repository.createLicense(values.key, expiresAt);
+      await repository.createLicense(values.key, expiresAt);
       console.log(`Created license ${values.key}`);
       break;
     }
     case "license:list":
-      console.table(repository.listLicenses());
+      console.table(await repository.listLicenses());
       break;
     case "license:revoke":
     case "license:restore": {
       if (!values.key) throw new Error("--key is required");
       const blocked = command === "license:revoke";
-      if (!repository.setBlocked(values.key, blocked)) {
+      if (!(await repository.setBlocked(values.key, blocked))) {
         throw new Error(`License ${values.key} was not found`);
       }
       console.log(`${blocked ? "Revoked" : "Restored"} license ${values.key}`);
@@ -47,7 +46,7 @@ try {
       if (!values.version || !values.notes || !values.link) {
         throw new Error("--version, --notes and --link are required");
       }
-      repository.setUpdate(values.version, values.notes, values.link);
+      await repository.setUpdate(values.version, values.notes, values.link);
       console.log(`Activated update ${values.version}`);
       break;
     }
@@ -55,5 +54,5 @@ try {
       throw new Error(`Unknown command: ${command ?? "(missing)"}`);
   }
 } finally {
-  db.close();
+  store.close();
 }

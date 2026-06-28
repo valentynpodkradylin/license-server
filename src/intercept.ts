@@ -4,12 +4,13 @@ import https from "node:https";
 import path from "node:path";
 import { buildApp } from "./app.js";
 import { getConfig } from "./config.js";
-import { openDatabase } from "./database.js";
+import { openRepository } from "./repositoryFactory.js";
 
 const interceptionDirectory = path.resolve(process.cwd(), ".local-proxy");
 const pfxPath = path.join(interceptionDirectory, "plugin-license.pfx");
 const passwordPath = path.join(interceptionDirectory, "cert-password.txt");
-const domain = "plugin-license.vercel.app";
+const config = getConfig();
+const domain = new URL(config.publicSiteUrl).hostname;
 
 if (!fs.existsSync(pfxPath) || !fs.existsSync(passwordPath)) {
   throw new Error(
@@ -17,9 +18,8 @@ if (!fs.existsSync(pfxPath) || !fs.existsSync(passwordPath)) {
   );
 }
 
-const config = getConfig();
-const db = openDatabase(config.databasePath);
-const app = buildApp({ config, db, logger: true });
+const store = await openRepository(config);
+const app = buildApp({ config, repository: store.repository, logger: true });
 
 const proxy = https.createServer(
   {
@@ -62,7 +62,7 @@ const proxy = https.createServer(
 const shutdown = async () => {
   await new Promise<void>((resolve) => proxy.close(() => resolve()));
   await app.close();
-  db.close();
+  store.close();
 };
 
 process.on("SIGINT", shutdown);

@@ -1,5 +1,7 @@
 import type { SqliteDatabase } from "./database.js";
 
+type MaybePromise<T> = T | Promise<T>;
+
 export interface LicenseRow {
   key: string;
   status: string;
@@ -15,7 +17,23 @@ export interface UpdateRow {
   active: number;
 }
 
-export class LicenseRepository {
+export interface LicenseStore {
+  getLicense(key: string): MaybePromise<LicenseRow | undefined>;
+  listLicenses(): MaybePromise<LicenseRow[]>;
+  createLicense(key: string, expiresAt: string | null): MaybePromise<void>;
+  setBlocked(key: string, blocked: boolean): MaybePromise<boolean>;
+  recordActivation(key: string, deviceId: string): MaybePromise<void>;
+  audit(
+    operation: string,
+    key: string | null,
+    deviceId: string | null,
+    result: string,
+  ): MaybePromise<void>;
+  setUpdate(version: string, notes: string, link: string): MaybePromise<void>;
+  getActiveUpdate(): MaybePromise<UpdateRow | undefined>;
+}
+
+export class LicenseRepository implements LicenseStore {
   constructor(private readonly db: SqliteDatabase) {}
 
   getLicense(key: string): LicenseRow | undefined {
