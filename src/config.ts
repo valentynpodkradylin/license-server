@@ -10,6 +10,10 @@ export interface AppConfig {
   openMeteoUrl: string;
   logLevel: string;
   downloadsPath: string;
+  databaseUrl?: string;
+  adminUsername?: string;
+  adminPassword?: string;
+  publicSiteUrl: string;
 }
 
 export function getConfig(overrides: Partial<AppConfig> = {}): AppConfig {
@@ -27,5 +31,12 @@ export function getConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     logLevel: overrides.logLevel ?? process.env.LOG_LEVEL ?? "info",
     downloadsPath:
       overrides.downloadsPath ?? path.resolve(cwd, "downloads"),
+    databaseUrl: overrides.databaseUrl ?? process.env.DATABASE_URL,
+    adminUsername: overrides.adminUsername ?? process.env.ADMIN_USERNAME,
+    adminPassword: overrides.adminPassword ?? process.env.ADMIN_PASSWORD,
+    publicSiteUrl:
+      overrides.publicSiteUrl ??
+      process.env.PUBLIC_SITE_URL ??
+      "https://plugin-license.vercel.app",
   };
 }

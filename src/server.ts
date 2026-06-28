@@ -1,14 +1,14 @@
 import { buildApp } from "./app.js";
 import { getConfig } from "./config.js";
-import { openDatabase } from "./database.js";
+import { openRepository } from "./repositoryFactory.js";
 
 const config = getConfig();
-const db = openDatabase(config.databasePath);
-const app = buildApp({ config, db, logger: true });
+const store = await openRepository(config);
+const app = buildApp({ config, repository: store.repository, logger: true });
 
 const shutdown = async () => {
   await app.close();
-  db.close();
+  store.close();
 };
 
 process.on("SIGINT", shutdown);

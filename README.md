@@ -1,177 +1,96 @@
-# Локальный сервер лицензий OHFlightBuilder
+# Лицензионный сервер OHFlightBuilder
 
-Сервер обрабатывает запросы лицензирования, обновлений и прогноза погоды
-плагина OHFlightBuilder.
+Fastify-сервер для лицензий, обновлений, загрузок и прогноза погоды плагина
+OHFlightBuilder. Те же API работают локально и на Vercel.
 
 ## Установка
 
 ```powershell
-cd D:\Downloads\TEST\license-server
 pnpm install
 pnpm build
 ```
 
-По умолчанию HTTP-сервер слушает `127.0.0.1:8080`. Значения `HOST` и `PORT`
-можно изменить в файле `.env`.
+Локально сервер слушает `127.0.0.1:8080`. Настройки лежат в `.env`.
 
-## Первый запуск: настройка перехвата
+## Переменные окружения
 
-Старая DLL обращается к `https://plugin-license.vercel.app`. Чтобы направить
-эти запросы на локальный сервер без изменения DLL:
+```env
+HOST=127.0.0.1
+PORT=8080
+DATABASE_PATH=./data/licenses.sqlite
+DATABASE_URL=
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=change-me
+PUBLIC_SITE_URL=https://your-project.vercel.app
+OPEN_METEO_URL=https://api.open-meteo.com/v1/forecast
+LOG_LEVEL=info
+```
 
-1. Откройте PowerShell **от имени администратора**.
-2. Выполните:
+Если `DATABASE_URL` пустой, используется локальный SQLite-файл. Для Vercel
+укажите Neon connection string в `DATABASE_URL`.
+
+## Админка
+
+Админка встроена в тот же Fastify app:
+
+```text
+https://your-project.vercel.app/admin
+```
+
+Логин и пароль берутся из `ADMIN_USERNAME` и `ADMIN_PASSWORD`. Через админку
+можно создать бессрочную лицензию, создать лицензию с ручным `expires_at`,
+заблокировать и восстановить ключ.
+
+## Vercel + Neon
+
+1. Создайте Neon Postgres database.
+2. В Vercel добавьте env:
+   `DATABASE_URL`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `PUBLIC_SITE_URL`.
+3. Задеплойте репозиторий. `vercel.json` направляет все запросы в тот же
+   Fastify handler.
+
+Публичные маршруты остаются прежними:
+
+```text
+/api/license/activate
+/api/license/status
+/api/license/update
+/api/forecast
+/downloads/:filename
+```
+
+## Локальный перехват старой DLL
+
+Старая DLL обращается к `PUBLIC_SITE_URL`. Для локального режима можно
+направить этот домен на `127.0.0.1` и оставить HTTPS:
 
 ```powershell
-cd D:\Downloads\TEST\license-server
+$env:PUBLIC_SITE_URL="https://plugin-license.vercel.app"
 .\setup-interception.ps1
-```
-
-Скрипт:
-
-- добавляет `plugin-license.vercel.app` в системный файл `hosts`;
-- направляет домен на `127.0.0.1`;
-- создаёт и устанавливает доверенный локальный TLS-сертификат.
-
-Эту настройку нужно выполнить только один раз.
-
-## Обычный запуск
-
-В первом окне PowerShell запустите сервер:
-
-```powershell
-cd D:\Downloads\TEST\license-server
 pnpm start:intercept
 ```
 
-Не закрывайте это окно во время работы Mission Planner.
+Скрипт нужно запускать от имени администратора. Он добавляет hosts-запись,
+создает локальный TLS-сертификат и проксирует HTTPS `:443` в Fastify на
+`127.0.0.1:8080`.
 
-В другом окне PowerShell создайте лицензионный ключ:
-
-```powershell
-cd D:\Downloads\TEST\license-server
-pnpm license:create -- --key TEST-LICENSE-001
-```
-
-Затем запустите:
-
-```powershell
-D:\Downloads\MissionPlanner-1.3.82\MissionPlanner.exe
-```
-
-Когда OHFlightBuilder запросит ключ активации, введите:
-
-```text
-TEST-LICENSE-001
-```
-
-## Как работает перехват
-
-HTTPS-прокси слушает `127.0.0.1:443` и передаёт запросы локальному серверу на
-`http://127.0.0.1:8080`, сохраняя HTTP-метод, путь, заголовки и тело запроса.
-
-Например:
-
-```text
-https://plugin-license.vercel.app/api/license/activate
-```
-
-перенаправляется на:
-
-```text
-http://127.0.0.1:8080/api/license/activate
-```
-
-Аналогично работают:
-
-- `/api/license/status`;
-- `/api/license/update`;
-- `/api/forecast`.
-
-Маршрут `/health` используется только для проверки состояния сервера и не
-заменяет маршруты `/api/...`.
-
-Проверка:
-
-```powershell
-Invoke-RestMethod https://plugin-license.vercel.app/health
-```
-
-Ожидаемый ответ:
-
-```json
-{
-  "status": "ok"
-}
-```
-
-## Управление лицензиями
-
-Создать ключ:
+## CLI
 
 ```powershell
 pnpm license:create -- --key TEST-LICENSE-001
-```
-
-Создать ключ со сроком действия:
-
-```powershell
 pnpm license:create -- --key TEST-LICENSE-002 --expires 2027-01-01T00:00:00Z
-```
-
-Показать лицензии:
-
-```powershell
 pnpm license:list
-```
-
-Заблокировать лицензию:
-
-```powershell
 pnpm license:revoke -- --key TEST-LICENSE-001
-```
-
-Восстановить лицензию:
-
-```powershell
 pnpm license:restore -- --key TEST-LICENSE-001
+pnpm update:set -- --version 1.13.0 --notes "Описание" --link "$env:PUBLIC_SITE_URL/downloads/OHFlightBuilder.zip"
 ```
 
-## Обновления плагина
+CLI тоже использует `DATABASE_URL`, если он задан.
 
-Архив обновления необходимо поместить в каталог `downloads`, затем выполнить:
+## Проверка
 
 ```powershell
-pnpm update:set -- --version 1.13.0 --notes "Описание изменений" --link "http://localhost:8080/downloads/OHFlightBuilder.zip"
-```
-
-## Остановка
-
-Для остановки сервера нажмите `Ctrl+C` в окне с `pnpm start:intercept`.
-
-## Удаление перехвата
-
-Откройте PowerShell от имени администратора и выполните:
-
-```powershell
-cd D:\Downloads\TEST\license-server
-.\remove-interception.ps1
-```
-
-Скрипт удалит запись из `hosts`, локальный сертификат и созданные файлы
-сертификата.
-
-## Ошибка EADDRINUSE
-
-Ошибка:
-
-```text
-listen EADDRINUSE: address already in use 127.0.0.1:8080
-```
-
-означает, что сервер уже запущен в другом окне или другим процессом. Закройте
-предыдущий экземпляр с помощью `Ctrl+C`, после чего повторите:
-
-```powershell
-pnpm start:intercept
+pnpm type-check
+pnpm test
+pnpm build
 ```

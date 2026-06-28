@@ -1,6 +1,17 @@
 $ErrorActionPreference = "Stop"
 
-$domain = "plugin-license.vercel.app"
+$envPath = Join-Path $PSScriptRoot ".env"
+$publicSiteUrl = $env:PUBLIC_SITE_URL
+if (-not $publicSiteUrl -and (Test-Path $envPath)) {
+    $publicSiteLine = Get-Content $envPath | Where-Object { $_ -match "^\s*PUBLIC_SITE_URL\s*=" } | Select-Object -First 1
+    if ($publicSiteLine) {
+        $publicSiteUrl = ($publicSiteLine -replace "^\s*PUBLIC_SITE_URL\s*=\s*", "").Trim('"')
+    }
+}
+if (-not $publicSiteUrl) {
+    $publicSiteUrl = "https://plugin-license.vercel.app"
+}
+$domain = ([System.Uri]$publicSiteUrl).Host
 $marker = "# OHFlightBuilder local license server"
 $hostsPath = Join-Path $env:SystemRoot "System32\drivers\etc\hosts"
 $outputDirectory = Join-Path $PSScriptRoot ".local-proxy"
@@ -54,4 +65,5 @@ Set-Content -Path $hostsPath -Value $updatedHosts -Encoding ASCII
 
 Clear-DnsClientCache
 Write-Host "Configured $domain -> 127.0.0.1 and installed the local TLS certificate."
+Write-Host "Public site URL: $publicSiteUrl"
 Write-Host "Start interception with: pnpm start:intercept"
