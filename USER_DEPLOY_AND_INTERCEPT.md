@@ -30,7 +30,7 @@ postgresql://USER:PASSWORD@HOST.neon.tech/DB?sslmode=require
 DATABASE_URL=postgresql://USER:PASSWORD@HOST.neon.tech/DB?sslmode=require
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=change-me
-PUBLIC_SITE_URL=https://license-server-git-main-valentynpodkradylins-projects.vercel.app
+PUBLIC_SITE_URL=https://license-server-valentynpodkradylins-projects.vercel.app
 OPEN_METEO_URL=https://api.open-meteo.com/v1/forecast
 LOG_LEVEL=info
 ```
@@ -42,7 +42,7 @@ LOG_LEVEL=info
 7. После деплоя откройте production URL:
 
 ```text
-https://license-server-git-main-valentynpodkradylins-projects.vercel.app
+https://license-server-valentynpodkradylins-projects.vercel.app
 ```
 
 `PUBLIC_SITE_URL` должен совпадать с публичным production URL.
@@ -52,7 +52,7 @@ https://license-server-git-main-valentynpodkradylins-projects.vercel.app
 Проверка health endpoint:
 
 ```powershell
-$SiteUrl = "https://license-server-git-main-valentynpodkradylins-projects.vercel.app"
+$SiteUrl = "https://license-server-valentynpodkradylins-projects.vercel.app"
 Invoke-RestMethod "$SiteUrl/health"
 ```
 
@@ -69,7 +69,7 @@ Invoke-RestMethod "$SiteUrl/health"
 1. Откройте:
 
 ```text
-https://license-server-git-main-valentynpodkradylins-projects.vercel.app/admin
+https://license-server-valentynpodkradylins-projects.vercel.app/admin
 ```
 
 2. Войдите через `ADMIN_USERNAME` и `ADMIN_PASSWORD`.
@@ -86,7 +86,7 @@ TEST-LICENSE-001
 Сгенерируйте тестовый `deviceId` и вызовите activation endpoint:
 
 ```powershell
-$SiteUrl = "https://license-server-git-main-valentynpodkradylins-projects.vercel.app"
+$SiteUrl = "https://license-server-valentynpodkradylins-projects.vercel.app"
 $Body = @{
   key = "TEST-LICENSE-001"
   deviceId = ("a" * 64)
