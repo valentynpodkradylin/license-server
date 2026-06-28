@@ -31,8 +31,8 @@ postgresql://neondb_owner:npg_jve2DML8NfBR@ep-lucky-silence-as1r8nt9-pooler.c-4.
 ```env
 DATABASE_URL=postgresql://USER:PASSWORD@HOST.neon.tech/DB?sslmode=require
 ADMIN_USERNAME=admin
-ADMIN_PASSWORD=your-strong-password
-PUBLIC_SITE_URL=https://your-project.vercel.app
+ADMIN_PASSWORD=admin
+PUBLIC_SITE_URL=https://license-server.vercel.app
 OPEN_METEO_URL=https://api.open-meteo.com/v1/forecast
 LOG_LEVEL=info
 ```
@@ -41,7 +41,7 @@ LOG_LEVEL=info
 5. После деплоя откройте production URL, например:
 
 ```text
-https://your-project.vercel.app
+https://license-server.vercel.app
 ```
 
 `PUBLIC_SITE_URL` должен совпадать с публичным production URL.
