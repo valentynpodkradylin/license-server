@@ -46,7 +46,10 @@ https://your-project.vercel.app/admin
 1. Создайте Neon Postgres database.
 2. В Vercel добавьте env:
    `DATABASE_URL`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `PUBLIC_SITE_URL`.
-3. Задеплойте репозиторий. `vercel.json` направляет все запросы в тот же
+3. Оставьте Framework Preset `Other`, Build Command `pnpm build`, Output Directory `dist`.
+4. Выключите `Vercel Authentication` в `Settings -> Deployment Protection`,
+   иначе API будет доступен только после входа в Vercel.
+5. Задеплойте репозиторий. `vercel.json` направляет все запросы в тот же
    Fastify handler.
 
 Публичные маршруты остаются прежними:

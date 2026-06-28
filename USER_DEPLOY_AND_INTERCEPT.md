@@ -18,8 +18,6 @@
 ```text
 postgresql://USER:PASSWORD@HOST.neon.tech/DB?sslmode=require
 ```
-postgresql://neondb_owner:npg_jve2DML8NfBR@ep-lucky-silence-as1r8nt9-pooler.c-4.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
-
 Это значение понадобится как `DATABASE_URL`.
 
 ## 2. Задеплоить на Vercel
@@ -31,17 +29,20 @@ postgresql://neondb_owner:npg_jve2DML8NfBR@ep-lucky-silence-as1r8nt9-pooler.c-4.
 ```env
 DATABASE_URL=postgresql://USER:PASSWORD@HOST.neon.tech/DB?sslmode=require
 ADMIN_USERNAME=admin
-ADMIN_PASSWORD=admin
-PUBLIC_SITE_URL=https://license-server.vercel.app
+ADMIN_PASSWORD=change-me
+PUBLIC_SITE_URL=https://license-server-git-main-valentynpodkradylins-projects.vercel.app
 OPEN_METEO_URL=https://api.open-meteo.com/v1/forecast
 LOG_LEVEL=info
 ```
 
-4. Нажмите Deploy.
-5. После деплоя откройте production URL, например:
+4. Build Command укажите `pnpm build`, Output Directory — `dist`.
+5. Нажмите Deploy.
+6. В `Settings -> Deployment Protection` выключите `Vercel Authentication`,
+   иначе внешние запросы плагина будут перенаправлены на вход Vercel.
+7. После деплоя откройте production URL:
 
 ```text
-https://license-server.vercel.app
+https://license-server-git-main-valentynpodkradylins-projects.vercel.app
 ```
 
 `PUBLIC_SITE_URL` должен совпадать с публичным production URL.
@@ -51,7 +52,7 @@ https://license-server.vercel.app
 Проверка health endpoint:
 
 ```powershell
-$SiteUrl = "https://your-project.vercel.app"
+$SiteUrl = "https://license-server-git-main-valentynpodkradylins-projects.vercel.app"
 Invoke-RestMethod "$SiteUrl/health"
 ```
 
@@ -68,7 +69,7 @@ Invoke-RestMethod "$SiteUrl/health"
 1. Откройте:
 
 ```text
-https://your-project.vercel.app/admin
+https://license-server-git-main-valentynpodkradylins-projects.vercel.app/admin
 ```
 
 2. Войдите через `ADMIN_USERNAME` и `ADMIN_PASSWORD`.
@@ -85,7 +86,7 @@ TEST-LICENSE-001
 Сгенерируйте тестовый `deviceId` и вызовите activation endpoint:
 
 ```powershell
-$SiteUrl = "https://your-project.vercel.app"
+$SiteUrl = "https://license-server-git-main-valentynpodkradylins-projects.vercel.app"
 $Body = @{
   key = "TEST-LICENSE-001"
   deviceId = ("a" * 64)
