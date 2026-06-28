@@ -98,6 +98,10 @@ test("admin requires login and accepts the configured credentials", async () => 
   const cookie = login.headers["set-cookie"];
   assert.ok(cookie);
 
+  repository.createLicense("EXPIRED", "2020-01-01T00:00:00.000Z");
+  repository.createLicense("BLOCKED", null);
+  repository.setBlocked("BLOCKED", true);
+
   const open = await app.inject({
     method: "GET",
     url: "/admin",
@@ -105,6 +109,8 @@ test("admin requires login and accepts the configured credentials", async () => 
   });
   assert.equal(open.statusCode, 200);
   assert.match(open.body, /LICENSE-KEY-1234567890AB/);
+  assert.match(open.body, /<td>EXPIRED<\/td>\s*<td>expired<\/td>/);
+  assert.match(open.body, /<td>BLOCKED<\/td>\s*<td>blocked<\/td>/);
 });
 
 test("admin creates perpetual and expiring licenses", async () => {

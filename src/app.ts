@@ -25,17 +25,21 @@ interface BuildOptions {
   logger?: boolean;
 }
 
+function licenseStatus(license: LicenseRow): string {
+  if (license.blocked === 1) return "blocked";
+  if (
+    license.status === "active" &&
+    license.expires_at !== null &&
+    new Date(license.expires_at).getTime() <= Date.now()
+  ) {
+    return "expired";
+  }
+  return license.status;
+}
+
 function licenseFailure(license: LicenseRow | undefined): 404 | 403 | null {
   if (!license) return 404;
-  if (
-    license.blocked === 1 ||
-    license.status !== "active" ||
-    (license.expires_at !== null &&
-      new Date(license.expires_at).getTime() <= Date.now())
-  ) {
-    return 403;
-  }
-  return null;
+  return licenseStatus(license) === "active" ? null : 403;
 }
 
 function escapeHtml(value: unknown): string {
@@ -141,7 +145,7 @@ export function buildApp(options: BuildOptions) {
       .map(
         (license) => `<tr>
 <td>${escapeHtml(license.key)}</td>
-<td>${escapeHtml(license.status)}</td>
+<td>${escapeHtml(licenseStatus(license))}</td>
 <td>${license.expires_at ? escapeHtml(license.expires_at) : "never"}</td>
 <td>${escapeHtml(license.created_at)}</td>
 <td><form method="post" action="/admin/licenses/${encodeURIComponent(license.key)}/${license.blocked ? "restore" : "revoke"}"><button>${license.blocked ? "Restore" : "Revoke"}</button></form></td>

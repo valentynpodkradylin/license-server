@@ -15,6 +15,7 @@ $domain = ([System.Uri]$publicSiteUrl).Host
 $marker = "# OHFlightBuilder local license server"
 $hostsPath = Join-Path $env:SystemRoot "System32\drivers\etc\hosts"
 $outputDirectory = Join-Path $PSScriptRoot ".local-proxy"
+$domainPath = Join-Path $outputDirectory "domain.txt"
 
 $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
 $principal = [Security.Principal.WindowsPrincipal]::new($identity)
@@ -23,6 +24,7 @@ if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administra
 }
 
 New-Item -ItemType Directory -Force -Path $outputDirectory | Out-Null
+$previousDomain = if (Test-Path $domainPath) { (Get-Content $domainPath -Raw).Trim() } else { $null }
 
 $existingThumbprintPath = Join-Path $outputDirectory "cert-thumbprint.txt"
 if (Test-Path $existingThumbprintPath) {
@@ -56,12 +58,17 @@ Set-Content -Path (Join-Path $outputDirectory "cert-password.txt") -Value $passw
 Set-Content -Path $existingThumbprintPath -Value $certificate.Thumbprint -NoNewline
 
 $hostsLines = Get-Content $hostsPath
+$domainsToRemove = @($domain, $previousDomain) | Where-Object { $_ } | Select-Object -Unique
 $filteredLines = $hostsLines | Where-Object {
-    $_ -notmatch ("^\s*127\.0\.0\.1\s+" + [regex]::Escape($domain) + "(\s|$)") -and
+    $line = $_
+    -not ($domainsToRemove | Where-Object {
+        $line -match ("^\s*127\.0\.0\.1\s+" + [regex]::Escape($_) + "(\s|$)")
+    }) -and
     $_ -ne $marker
 }
 $updatedHosts = @($filteredLines) + $marker + "127.0.0.1 $domain"
 Set-Content -Path $hostsPath -Value $updatedHosts -Encoding ASCII
+Set-Content -Path $domainPath -Value $domain -NoNewline
 
 Clear-DnsClientCache
 Write-Host "Configured $domain -> 127.0.0.1 and installed the local TLS certificate."

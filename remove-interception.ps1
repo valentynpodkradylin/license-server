@@ -1,9 +1,14 @@
 $ErrorActionPreference = "Stop"
 
-$domain = "plugin-license.vercel.app"
 $marker = "# OHFlightBuilder local license server"
 $hostsPath = Join-Path $env:SystemRoot "System32\drivers\etc\hosts"
 $outputDirectory = Join-Path $PSScriptRoot ".local-proxy"
+$domainPath = Join-Path $outputDirectory "domain.txt"
+$domain = if (Test-Path $domainPath) {
+    (Get-Content $domainPath -Raw).Trim()
+} else {
+    "plugin-license.vercel.app"
+}
 
 $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
 $principal = [Security.Principal.WindowsPrincipal]::new($identity)
