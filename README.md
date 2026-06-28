@@ -40,13 +40,18 @@ https://your-project.vercel.app/admin
 Логин и пароль берутся из `ADMIN_USERNAME` и `ADMIN_PASSWORD`. Через админку
 можно создать бессрочную лицензию, создать лицензию с ручным `expires_at`,
 заблокировать и восстановить ключ.
+Истёкшие и заблокированные лицензии отображаются как `expired` и `blocked`;
+защищённые API-маршруты возвращают для них `403`.
 
 ## Vercel + Neon
 
 1. Создайте Neon Postgres database.
 2. В Vercel добавьте env:
    `DATABASE_URL`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `PUBLIC_SITE_URL`.
-3. Задеплойте репозиторий. `vercel.json` направляет все запросы в тот же
+3. Оставьте Framework Preset `Other`, Build Command `pnpm build`, Output Directory `dist`.
+4. Выключите `Vercel Authentication` в `Settings -> Deployment Protection`,
+   иначе API будет доступен только после входа в Vercel.
+5. Задеплойте репозиторий. `vercel.json` направляет все запросы в тот же
    Fastify handler.
 
 Публичные маршруты остаются прежними:
